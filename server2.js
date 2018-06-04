@@ -31,7 +31,7 @@ const server = net.createServer((connection) => {
             if (command.includes('POST USERNAME: ')) {
                 clientName = command.replace('POST USERNAME: ', '');
                 clients[clientName] = connection;
-                connection.write(` - Welcome to the IRC, There are ${clientCount} active users\r\n`);
+                connection.write(` - Welcome! , There are ${clientCount} active users\r\n`);
                 broadcast(` - ${clientName} has joined the room\r\n`);
                 command = null;
             }
@@ -40,11 +40,19 @@ const server = net.createServer((connection) => {
             }
         }
         else {
-            if (command.includes('POST USERNAME: ')) {
-                clientName = command.replace('POST USERNAME: ', '');
+            if (command.includes('PUT USERNAME: ')) {
+                delete clients[clientName];
+                clientName = command.replace('PUT USERNAME: ', '');
                 clients[clientName] = connection;
-                connection.write(` - Welcome to the Chatbox, There are ${clientCount} active users\r\n`);
-                broadcast(` - ${clientName} has joined the room\r\n`);
+                connection.write(`Username changed to ${clientName}\r\n`);
+                command = null;
+            } else if (command.includes('POST ROOM: ')) {
+                room = command.replace('POST ROOM: ', '');
+                rooms[room] = [];
+                connection.write(`Created room ${room}\r\n`);
+                command = null;
+            } else if (command.includes('GET ROOMS')) {
+                connection.write(`${Object.keys(rooms)}\r\n`);
                 command = null;
             }
             broadcast(`${clientName} - ${command}\r\n`);
