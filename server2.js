@@ -12,7 +12,7 @@ const server = net.createServer((connection) => {
 
     function broadcastDirect( msg, usr){
         var clientNames = Object.keys(clients);
-        if (!clients.includes(usr)){
+        if (!clientNames.includes(usr)){
             connection.write(`no such user\r\n`);
             return;
         }
