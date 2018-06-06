@@ -16,7 +16,7 @@ const server = net.createServer((connection) => {
             connection.write(`no such user\r\n`);
             return;
         }
-        clients[usr].write(`[${usr}] ${msg}`);
+        clients[usr].write(`[${clientName}] ${msg}`);
     }
 
     function broadcast( msg, rm ){
