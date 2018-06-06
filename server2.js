@@ -34,7 +34,7 @@ const server = net.createServer((connection) => {
     connection.write(`Please user command: [POST USERNAME: <username>]\r\n`);
     connection.setEncoding('utf-8');
     connection.on('data', data => {
-        command = data.replace('\r\n', '');
+        command = data.replace('\n', '');
         console.log(`client data: ${command}`);
         if (clientName == null) {
             if (command.includes('POST USERNAME: ')) {
