@@ -10,6 +10,15 @@ const server = net.createServer((connection) => {
     var userRooms = [];
     var command = null;
 
+    function broadcastDirect( msg, usr){
+        var clientNames = Object.keys(clients);
+        if (!clients.includes(usr)){
+            connection.write(`no such user\r\n`);
+            return;
+        }
+        clients[usr].write(`[${usr}] ${msg}`);
+    }
+
     function broadcast( msg, rm ){
         if (userRooms.length === 0) {
             connection.write('Please join a room first: [JOIN ROOM: <room>]\r\n');
@@ -127,6 +136,18 @@ const server = net.createServer((connection) => {
                 }
                 connection.write(`${userRooms}`);
                 command = null;
+            } else if (command.includes('POST DIRECT: ')) {
+                var payload = command.replace('POST DIRECT: ');
+                var commandList = payload.split('#');
+                var msg = commandList[2];
+                var toUser = commandList[1];
+                var time = new Date(Date.now());
+                broadcastDirect(`[${time}] - ${msg}\r\n`, toUser);
+                command = null;
+
+            } else if (command.includes('GET HELP')) {
+                var options = `POST USERNAME: <username>\r\nPOST ROOM: <room>\r\nJOIN ROOM: <room>\r\nLEAVE ROOM: <room>\r\nPOST MESSAGE: #<room>#<message\r\nGET ROOMS\r\nGET USERS: <room>||<all\r\nPOST DIRECT: #<username>#<message>\r\n`;
+                connection.write(options);
             } else {
                 connection.write('invalid command\r\n');
                 command = null;
@@ -151,10 +172,11 @@ const server = net.createServer((connection) => {
     });
 
     connection.on('error', (error) => {
+        clientCount -= 1;
         console.log(`Error : ${error}`);
     });
 
 //    connection.pipe(connection);
 });
 
-server.listen(4000, () => console.log('server listening'));
+server.listen(4000, () => console.log('server started'));
