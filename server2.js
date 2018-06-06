@@ -146,7 +146,14 @@ const server = net.createServer((connection) => {
                 command = null;
 
             } else if (command.includes('GET HELP')) {
-                var options = `POST USERNAME: <username>\r\nPOST ROOM: <room>\r\nJOIN ROOM: <room>\r\nLEAVE ROOM: <room>\r\nPOST MESSAGE: #<room>#<message\r\nGET ROOMS\r\nGET USERS: <room>||<all\r\nPOST DIRECT: #<username>#<message>\r\n`;
+                var options = `POST USERNAME: <username>              add username\r\n
+                POST ROOM: <room>                        create new room <room>\r\n         
+                JOIN ROOM: <room>                        join <room>\r\n
+                LEAVE ROOM: <room>                       leave <room>\r\n
+                POST MESSAGE: #<room>#<message>          send <message> to <room>\r\n
+                GET ROOMS                                list all rooms\r\n
+                GET USERS: <room>||<all>                 list users in <room> or <all> users\r\n
+                POST DIRECT: #<username>#<message>       send <message> directly to <username>\r\n`;
                 connection.write(options);
             } else {
                 connection.write('invalid command\r\n');
