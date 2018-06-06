@@ -146,7 +146,7 @@ const server = net.createServer((connection) => {
                 command = null;
 
             } else if (command.includes('GET HELP')) {
-                var options = `POST USERNAME: <username>              add username
+                var options = `POST USERNAME: <username>                add username
 POST ROOM: <room>                        create new room <room>
 JOIN ROOM: <room>                        join <room>
 LEAVE ROOM: <room>                       leave <room>

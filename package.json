@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/mezau532/irc#readme",
   "dependencies": {
-    "net": "^1.0.2"
+    "net": "^1.0.2",
+    "stream-replace": "^1.0.0"
   }
 }
