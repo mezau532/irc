@@ -173,9 +173,7 @@ POST DIRECT: #<username>#<message>       send <message> directly to <username>\r
         for ( let room in rooms ) {
             if (userRooms.includes(room)) {
                 broadcast(`${clientName} disconnected\r\n`, room);
-                if (room != null && rooms[room != null]) {
-                    delete rooms[room][clientName];
-                }
+                delete rooms[room][clientName];
             }
         }
         console.log(`${clientCount} clients connected`);
@@ -189,9 +187,7 @@ POST DIRECT: #<username>#<message>       send <message> directly to <username>\r
         for ( let room in rooms ) {
             if (userRooms.includes(room)) {
                 broadcast(`${clientName} disconnected\r\n`, room);
-                if (room != null && rooms[room != null]) {
-                    delete rooms[room][clientName];
-                }
+                delete rooms[room][clientName];
             }
         }
         console.log(`${clientCount} clients connected`);
