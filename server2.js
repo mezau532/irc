@@ -166,10 +166,13 @@ POST DIRECT: #<username>#<message>       send <message> directly to <username>\r
     connection.on('close', () => {
         clientCount -= 1;
         console.log('client disconnected');
+
+        if(clientName !== null){
+            delete clients[clientName];
+        }
         for ( let room in rooms ) {
             if (userRooms.includes(room)) {
                 broadcast(`${clientName} disconnected\r\n`, room);
-                delete clients[clientName];
                 if (room != null && rooms[room != null]) {
                     delete rooms[room][clientName];
                 }
