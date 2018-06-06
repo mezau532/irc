@@ -19,7 +19,7 @@ const server = net.createServer((connection) => {
             if( r === rm ){
                 for ( let client in rooms[r] ){
                     if(rooms[r][client] != connection){
-                        rooms[r][client].write(msg);
+                        rooms[r][client].write(`[${r}] ${msg}`);
                     } 
                 }
 
@@ -85,10 +85,10 @@ const server = net.createServer((connection) => {
             } else if (command.includes('LEAVE ROOM: ')) {
                 var room = command.replace('LEAVE ROOM: ', '');
                 if (userRooms.includes(room) && rooms[room] != null) {
+                    broadcast(`${clientName} left the room\r\n`, room);
                     delete rooms[room][clientName];
                     var index = userRooms.indexOf(room);
                     userRooms.splice(index, 1)
-                    broadcast(`${clientName} left the room\r\n`, room);
                     command =  null;
                 } else {
                     connection.write(`this room doesn't exist or you're not a member\r\n`);
@@ -117,8 +117,16 @@ const server = net.createServer((connection) => {
                     command = null;
                     return;
                 } else {
-                    connection.write(`${checkRoom} room does not exist`);
+                    connection.write(`${checkRoom} room does not exist\r\n`);
                 }
+            } else if (command.includes('GET MY ROOMS')) {
+                if (userRooms.length === 0) {
+                    connection.write('no rooms :(\r\n');
+                    command = null;
+                    return;
+                }
+                connection.write(`${userRooms}`);
+                command = null;
             } else {
                 connection.write('invalid command\r\n');
                 command = null;
@@ -130,7 +138,7 @@ const server = net.createServer((connection) => {
     connection.on('close', () => {
         clientCount -= 1;
         console.log('client disconnected');
-        for ( let room in room ) {
+        for ( let room in rooms ) {
             if (userRooms.includes(room)) {
                 broadcast(`${clientName} disconnected\r\n`, room);
                 delete clients[clientName];
