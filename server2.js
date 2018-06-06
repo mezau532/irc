@@ -7,16 +7,16 @@ var clientCount = 0;
 
 const server = net.createServer((connection) => {
     var clientName = null;
-    var room = null;
+    var userRooms = [];
     var command = null;
 
-    function broadcast( msg ){
-        if (room === null) {
+    function broadcast( msg, rm ){
+        if (userRooms.length === 0) {
             connection.write('Please join a room first: [JOIN ROOM: <room>]\r\n');
             return;
         }
         for( let r in rooms ){
-            if( r === room ){
+            if( r === rm ){
                 for ( let client in rooms[r] ){
                     if(rooms[r][client] != connection){
                         rooms[r][client].write(msg);
@@ -55,32 +55,23 @@ const server = net.createServer((connection) => {
             }
         }
         else {
-            if (command.includes('PUT USERNAME: ')) {
-                delete clients[clientName];
-                clientName = command.replace('PUT USERNAME: ', '');
-                clients[clientName] = connection;
-                if (room != null && rooms[room] != null) {
-                    delete rooms[room][clientName];
-                }
-                connection.write(`Username changed to ${clientName}\r\n`);
+            if (command.includes('POST ROOM: ')) {
+                const newRoom = command.replace('POST ROOM: ', '');
+                rooms[newRoom] = [];
+                connection.write(`Created room ${newRoom}\r\n`);
                 command = null;
-            } else if (command.includes('POST ROOM: ')) {
-                room = command.replace('POST ROOM: ', '');
-                rooms[room] = [];
-                connection.write(`Created room ${room}\r\n`);
-                command = null;
-                room = null;
             } else if (command.includes('GET ROOMS')) {
-                var roomList = Object.keys(rooms);
-                if (roomList.length == 0) {
+                var roomNames = Object.keys(rooms);
+                if (roomNames.length == 0) {
                     connection.write('no rooms :(\r\n');
                     command = null;
                     return;
                 }
-                connection.write(`${roomList}\r\n`);
+                connection.write(`${roomNames}\r\n`);
                 command = null;
             } else if (command.includes('JOIN ROOM: ')) {
-                room = command.replace('JOIN ROOM: ', '');
+                var room = command.replace('JOIN ROOM: ', '');
+
                 var roomsList = Object.keys(rooms);
                 if (!roomsList.includes(room)) {
                     connection.write(`no room ${room}\r\n`);
@@ -88,23 +79,43 @@ const server = net.createServer((connection) => {
                     rooms[room][clientName] = connection;
                     var roomClientsCount = Object.keys(rooms[room]).length;
                     connection.write(` - Welcome to ${room}! , There are ${roomClientsCount} users in this room\r\n`);
-                    broadcast(`${clientName} joined the room\r\n`);
+                    userRooms.push(room);
+                    broadcast(`${clientName} joined the room\r\n`, room);
                 }
-            } else if (command.includes('LEAVE ROOM')) {
-                if (room != null && rooms[room] != null) {
+            } else if (command.includes('LEAVE ROOM: ')) {
+                var room = command.replace('LEAVE ROOM: ', '');
+                if (userRooms.includes(room) && rooms[room] != null) {
                     delete rooms[room][clientName];
-                    broadcast(`${clientName} left the room\r\n`);
-                    room = null;
+                    var index = userRooms.indexOf(room);
+                    userRooms.splice(index, 1)
+                    broadcast(`${clientName} left the room\r\n`, room);
+                    command =  null;
+                } else {
+                    connection.write(`this room doesn't exist or you're not a member\r\n`);
                 }
+
             } else if (command.includes('POST MESSAGE: ')) {
-                var msg = command.replace('POST MESSAGE: ', '');
+                var payload = command.replace('POST MESSAGE: ', '');
+                var commandList = payload.split('#'); 
+                var msg = commandList[2];
+                var room = commandList[1];
                 var time = new Date(Date.now());
-                broadcast(`[${time}] ${clientName} - ${msg}\r\n`);
+                if (!userRooms.includes(room)) {
+                    connection.write(`must join [${room}] first\r\n`);
+                    command = null;
+                    return
+                }
+                broadcast(`[${time}] ${clientName} - ${msg}\r\n`, room);
             } else if (command.includes('GET USERS: ')){
                 var checkRoom = command.replace('GET USERS: ', '');
                 if (rooms[checkRoom] != null) {
                     connection.write(`${Object.keys(rooms[checkRoom])}\r\n`);
                     command = null;
+                    return;
+                } else if ( checkRoom === 'all' ) {
+                    connection.write(`${Object.keys(clients)}\r\n`);
+                    command = null;
+                    return;
                 } else {
                     connection.write(`${checkRoom} room does not exist`);
                 }
@@ -119,10 +130,14 @@ const server = net.createServer((connection) => {
     connection.on('close', () => {
         clientCount -= 1;
         console.log('client disconnected');
-        broadcast(`${clientName} disconnected\r\n`);
-        delete clients[clientName];
-        if (room != null && rooms[room != null]) {
-            delete rooms[room][clientName];
+        for ( let room in room ) {
+            if (userRooms.includes(room)) {
+                broadcast(`${clientName} disconnected\r\n`, room);
+                delete clients[clientName];
+                if (room != null && rooms[room != null]) {
+                    delete rooms[room][clientName];
+                }
+            }
         }
         console.log(`${clientCount} clients connected`);
     });
