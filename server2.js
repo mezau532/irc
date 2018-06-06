@@ -1,14 +1,14 @@
 const net = require('net');
 
-let clients = {}
-let rooms = {};
+var clients = {}
+var rooms = {};
 //Stores the number of active clients
-let clientCount = 0;
+var clientCount = 0;
 
 const server = net.createServer((connection) => {
-    let clientName = null;
-    let room = null;
-    let command = null;
+    var clientName = null;
+    var room = null;
+    var command = null;
 
     function broadcast( msg ){
         if (room === null) {
@@ -71,7 +71,13 @@ const server = net.createServer((connection) => {
                 command = null;
                 room = null;
             } else if (command.includes('GET ROOMS')) {
-                connection.write(`${Object.keys(rooms)}\r\n`);
+                var roomList = Object.keys(rooms);
+                if (roomList.length == 0) {
+                    connection.write('no rooms :(\r\n');
+                    command = null;
+                    return;
+                }
+                connection.write(`${roomList}\r\n`);
                 command = null;
             } else if (command.includes('JOIN ROOM: ')) {
                 room = command.replace('JOIN ROOM: ', '');
