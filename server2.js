@@ -1,6 +1,6 @@
 const net = require('net');
 
-var clients = {}
+var clients = {};
 var rooms = {};
 //Stores the number of active clients
 var clientCount = 0;
@@ -13,7 +13,7 @@ const server = net.createServer((connection) => {
     function broadcastDirect( msg, usr){
         var clientNames = Object.keys(clients);
         if (!clientNames.includes(usr)){
-            connection.write(`no such user\r\n`);
+            connection.write(`[fail]\r\n`);
             return;
         }
         clients[usr].write(`[direct] [${clientName}] ${msg}`);
@@ -21,7 +21,7 @@ const server = net.createServer((connection) => {
 
     function broadcast( msg, rm ){
         if (userRooms.length === 0) {
-            connection.write('Please join a room first: [JOIN ROOM: <room>]\r\n');
+            connection.write('[fail]\r\n');
             return;
         }
         for( let r in rooms ){
@@ -40,7 +40,7 @@ const server = net.createServer((connection) => {
     clientCount += 1;
     console.log(`${clientCount} clients connected`)
 
-    connection.write(`Please user command: [POST USERNAME: <username>]\r\n`);
+    connection.write(`[success] [${clientCount}]\r\n`);
     connection.setEncoding('utf-8');
     connection.on('data', data => {
         command = data.replace('\n', '');
@@ -49,25 +49,25 @@ const server = net.createServer((connection) => {
             if (command.includes('POST USERNAME: ')) {
                 clientName = command.replace('POST USERNAME: ', '');
                 if (Object.keys(clients).includes(clientName)) {
-                    connection.write(`${clientName} is taken please choose another name\r\n`);
+                    connection.write(`[fail] [username taken]\r\n`);
                     clientName = null;
                     command = null;
                     return;
                 }
                 clients[clientName] = connection;
-                connection.write(` - Welcome! , There are ${clientCount} active users\r\n`);
+                connection.write(`[success] [${clientCount}]\r\n`);
               //  broadcast(` - ${clientName} has joined the room\r\n`);
                 command = null;
             }
             else {
-                connection.write(`Please user command: [POST USERNAME: <username>]\r\n`);
+                connection.write(`[fail]\r\n`);
             }
         }
         else {
             if (command.includes('POST ROOM: #')) {
                 const newRoom = command.replace('POST ROOM: #', '');
+                connection.write(`[success] [${newRoom} created]\r\n`);
                 rooms[newRoom] = [];
-                connection.write(`Created room ${newRoom}\r\n`);
                 command = null;
             } else if (command.includes('GET ROOMS')) {
                 var roomNames = Object.keys(rooms);
@@ -83,11 +83,11 @@ const server = net.createServer((connection) => {
 
                 var roomsList = Object.keys(rooms);
                 if (!roomsList.includes(room)) {
-                    connection.write(`no room ${room}\r\n`);
+                    connection.write(`[fail] [no room ${room}]\r\n`);
                 } else {
                     rooms[room][clientName] = connection;
                     var roomClientsCount = Object.keys(rooms[room]).length;
-                    connection.write(` - Welcome to ${room}! , There are ${roomClientsCount} users in this room\r\n`);
+                    connection.write(`[success] [${room}] [${roomClientsCount}]\r\n`);
                     userRooms.push(room);
                     broadcast(`${clientName} joined the room\r\n`, room);
                 }
@@ -100,7 +100,7 @@ const server = net.createServer((connection) => {
                     userRooms.splice(index, 1)
                     command =  null;
                 } else {
-                    connection.write(`this room doesn't exist or you're not a member\r\n`);
+                    connection.write(`[fail] [this room doesn't exist or you're not a member]\r\n`);
                 }
 
             } else if (command.includes('POST MESSAGE: ')) {
@@ -110,7 +110,7 @@ const server = net.createServer((connection) => {
                 var room = commandList[1];
                 var time = new Date(Date.now());
                 if (!userRooms.includes(room)) {
-                    connection.write(`must join [${room}] first\r\n`);
+                    connection.write(`[fail] [must join [${room}] first]\r\n`);
                     command = null;
                     return
                 }
@@ -126,7 +126,7 @@ const server = net.createServer((connection) => {
                     command = null;
                     return;
                 } else {
-                    connection.write(`${checkRoom} room does not exist\r\n`);
+                    connection.write(`[fail] [${checkRoom} room does not exist]\r\n`);
                 }
             } else if (command.includes('GET MY ROOMS')) {
                 if (userRooms.length === 0) {
@@ -146,17 +146,17 @@ const server = net.createServer((connection) => {
                 command = null;
 
             } else if (command.includes('GET HELP')) {
-                var options = `POST USERNAME: <username>                add username
+                var options = `POST USERNAME: <username>                 add username
 POST ROOM: #<room>                        create new room <room>
 JOIN ROOM: #<room>                        join <room>
 LEAVE ROOM: #<room>                       leave <room>
-POST MESSAGE: #<room>#<message>          send <message> to <room>
-GET ROOMS                                list all rooms
-GET USERS: #<room>||#<all>                 list users in <room> or <all> users
-POST DIRECT: #<username>#<message>       send <message> directly to <username>\r\n`;
+POST MESSAGE: #<room>#<message>           send <message> to <room>
+GET ROOMS                                 list all rooms
+GET USERS: #<room>||#<all>                list users in <room> or <all> users
+POST DIRECT: #<username>#<message>        send <message> directly to <username>\r\n`;
                 connection.write(options);
             } else {
-                connection.write('invalid command\r\n');
+                connection.write('[fail] [invalid command]\r\n');
                 command = null;
             }
         }
