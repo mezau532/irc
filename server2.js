@@ -16,7 +16,7 @@ const server = net.createServer((connection) => {
             connection.write(`no such user\r\n`);
             return;
         }
-        clients[usr].write(`[${clientName}] ${msg}`);
+        clients[usr].write(`[direct] [${clientName}] ${msg}`);
     }
 
     function broadcast( msg, rm ){
@@ -28,7 +28,7 @@ const server = net.createServer((connection) => {
             if( r === rm ){
                 for ( let client in rooms[r] ){
                     if(rooms[r][client] != connection){
-                        rooms[r][client].write(`[${r}] ${msg}`);
+                        rooms[r][client].write(`[room] [${r}] ${msg}`);
                     } 
                 }
 
@@ -64,8 +64,8 @@ const server = net.createServer((connection) => {
             }
         }
         else {
-            if (command.includes('POST ROOM: ')) {
-                const newRoom = command.replace('POST ROOM: ', '');
+            if (command.includes('POST ROOM: #')) {
+                const newRoom = command.replace('POST ROOM: #', '');
                 rooms[newRoom] = [];
                 connection.write(`Created room ${newRoom}\r\n`);
                 command = null;
@@ -78,8 +78,8 @@ const server = net.createServer((connection) => {
                 }
                 connection.write(`${roomNames}\r\n`);
                 command = null;
-            } else if (command.includes('JOIN ROOM: ')) {
-                var room = command.replace('JOIN ROOM: ', '');
+            } else if (command.includes('JOIN ROOM: #')) {
+                var room = command.replace('JOIN ROOM: #', '');
 
                 var roomsList = Object.keys(rooms);
                 if (!roomsList.includes(room)) {
@@ -91,8 +91,8 @@ const server = net.createServer((connection) => {
                     userRooms.push(room);
                     broadcast(`${clientName} joined the room\r\n`, room);
                 }
-            } else if (command.includes('LEAVE ROOM: ')) {
-                var room = command.replace('LEAVE ROOM: ', '');
+            } else if (command.includes('LEAVE ROOM: #')) {
+                var room = command.replace('LEAVE ROOM: #', '');
                 if (userRooms.includes(room) && rooms[room] != null) {
                     broadcast(`${clientName} left the room\r\n`, room);
                     delete rooms[room][clientName];
@@ -114,9 +114,9 @@ const server = net.createServer((connection) => {
                     command = null;
                     return
                 }
-                broadcast(`[${time}] ${clientName} - ${msg}\r\n`, room);
-            } else if (command.includes('GET USERS: ')){
-                var checkRoom = command.replace('GET USERS: ', '');
+                broadcast(`[${clientName}] [${time}] - ${msg}\r\n`, room);
+            } else if (command.includes('GET USERS: #')){
+                var checkRoom = command.replace('GET USERS: #', '');
                 if (rooms[checkRoom] != null) {
                     connection.write(`${Object.keys(rooms[checkRoom])}\r\n`);
                     command = null;
@@ -147,12 +147,12 @@ const server = net.createServer((connection) => {
 
             } else if (command.includes('GET HELP')) {
                 var options = `POST USERNAME: <username>                add username
-POST ROOM: <room>                        create new room <room>
-JOIN ROOM: <room>                        join <room>
-LEAVE ROOM: <room>                       leave <room>
+POST ROOM: #<room>                        create new room <room>
+JOIN ROOM: #<room>                        join <room>
+LEAVE ROOM: #<room>                       leave <room>
 POST MESSAGE: #<room>#<message>          send <message> to <room>
 GET ROOMS                                list all rooms
-GET USERS: <room>||<all>                 list users in <room> or <all> users
+GET USERS: #<room>||#<all>                 list users in <room> or <all> users
 POST DIRECT: #<username>#<message>       send <message> directly to <username>\r\n`;
                 connection.write(options);
             } else {
