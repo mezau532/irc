@@ -60,7 +60,7 @@ const server = net.createServer((connection) => {
                 command = null;
             }
             else {
-                connection.write(`[fail]\r\n`);
+                connection.write(`[fail] [must create username]\r\n`);
             }
         }
         else {
