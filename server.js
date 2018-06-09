@@ -197,4 +197,9 @@ POST DIRECT: #<username>#<message>        send <message> directly to <username>\
 //    connection.pipe(connection);
 });
 
+process.on('SIGINT', () => {
+    console.log('shutting down');
+    process.exit();
+});
+
 server.listen(4000, () => console.log('server started'));
