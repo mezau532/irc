@@ -5,5 +5,9 @@ var client = net.connect({
     port: '4000',
 });
 
+client.on('close', () => {
+    console.log('server closed connection\r\n');
+    process.exit();
+});
 client.pipe(process.stdout);
 process.stdin.pipe(client);
